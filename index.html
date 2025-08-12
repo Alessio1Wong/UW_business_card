@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Card Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Add JSZip and html2canvas libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* --- Global Styles --- */
+        :root {
+            --primary-color: #6A0DAD; /* Default to Engineering Purple */
+            --background-color: #f4f7f9;
+            --form-bg-color: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --download-color: #28a745;
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Lato', 'Noto Sans TC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Changed to flex-start for better alignment on long pages */
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        /* --- Page Container --- */
+        .page {
+            width: 100%;
+            max-width: 800px;
+            padding: 2rem 3rem;
+            background: var(--form-bg-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        /* --- Form Page Styles --- */
+        #form-page h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--text-color);
+            margin-bottom: 2.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(77, 44, 145, 0.15);
+        }
+        
+        .add-contact-btn {
+            padding: 10px 15px;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            background-color: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+        .add-contact-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .view-card-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .view-card-btn:hover {
+            background-color: #3b2273;
+            transform: translateY(-2px);
+        }
+
+        /* --- Card Preview Page Styles --- */
+        #card-page {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .page-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn, .download-btn {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .back-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .download-btn {
+            background-color: var(--download-color);
+            color: white;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        .download-btn:disabled {
+            background-color: #94dcb0;
+            cursor: not-allowed;
+        }
+
+
+        .card-display-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem; /* Spacing between front and back cards */
+        }
+
+        .business-card {
+            width: 340px;
+            height: 204px; 
+            background: #ffffff;
+            border-radius: 2px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px 20px 0 20px;
+        }
+        
+        .header-image {
+            width: 190px;
+            height: auto;
+            display: block;
+        }
+
+        .separator {
+            width: 100%;
+            height: 12px;
+            background-color: var(--primary-color);
+            margin-top: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .card-main-content {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .identity-section {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            max-width: 50%;
+        }
+
+        .name {
+            font-size: 18px;
+            font-weight: 900;
+            color: #000000;
+            margin: 0 0 5px 0;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .title {
+            font-size: 9px;
+            line-height: 1.4;
+            color: #333333;
+        }
+        
+        .title .degree, .title .major {
+            font-weight: 900;
+        }
+        
+        .contact-section {
+            position: absolute;
+            right: 95px; /* Moved left by ~2.5cm (95px) */
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: left;
+            font-size: 9px;
+            color: #333333;
+        }
+
+        .contact-info {
+            line-height: 1.8;
+            word-break: break-all;
+        }
+        
+        .business-card-back {
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .back-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Form Page -->
+    <div id="form-page" class="page">
+        <h1>Create Your Business Card</h1>
+        <form id="card-form">
+            <div class="form-group">
+                <label for="name-input">Name</label>
+                <input type="text" id="name-input" placeholder="Your full name">
+            </div>
+            <div class="form-group">
+                <label for="degree-input">Degree (e.g., BASc)</label>
+                <input type="text" id="degree-input" placeholder="Your degree">
+            </div>
+            <div class="form-group">
+                <label for="faculty-input">Faculty</label>
+                <select id="faculty-input">
+                    <option value="Engineering">Engineering</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="Arts">Arts</option>
+                    <option value="Health">Health</option>
+                    <option value="Environment">Environment</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="major-input">Major</label>
+                <input type="text" id="major-input" placeholder="Your programme">
+            </div>
+             <div class="form-group">
+                <label>Contact Methods</label>
+                <div id="additional-contacts-container">
+                    <input type="text" class="contact-input" placeholder="School Email" style="margin-bottom: 10px;">
+                    <input type="text" class="contact-input" placeholder="Personal Email" style="margin-bottom: 10px;">
+                </div>
+                <button type="button" class="add-contact-btn" id="add-contact-btn">+ Add Contact</button>
+            </div>
+            <button type="button" class="view-card-btn" id="view-card-btn">View My Card</button>
+        </form>
+    </div>
+
+    <!-- Card Preview Page -->
+    <div id="card-page" class="page">
+        <div class="page-controls">
+            <button class="back-btn" id="back-to-form-btn">← Back to Edit</button>
+            <button class="download-btn" id="download-btn">Download Cards</button>
+        </div>
+        <div class="card-display-area">
+            <!-- Front of the Card -->
+            <div id="card-front-to-download" class="business-card">
+                <header class="card-header">
+                    <img class="header-image" src="Photos/uwlogo.jpg" alt="University of Waterloo Logo Banner" crossorigin="anonymous">
+                </header>
+                <div class="separator" id="card-separator"></div>
+                <main class="card-main-content">
+                    <div class="identity-section">
+                        <h1 class="name" id="display-name"></h1>
+                        <div class="title">
+                            <div>Candidate for</div>
+                            <div class="degree" id="display-degree"></div>
+                            <div class="major" id="display-major"></div>
+                        </div>
+                    </div>
+                    <div class="contact-section">
+                        <div class="contact-info" id="display-contact-info">
+                            <!-- Contact items will be generated here by JavaScript -->
+                        </div>
+                    </div>
+                </main>
+            </div>
+            <!-- Back of the Card -->
+            <div id="card-back-to-download" class="business-card business-card-back">
+                <img class="back-image" src="Photos/b.png" alt="Business Card Back" crossorigin="anonymous">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Color Mapping ---
+        const facultyColors = {
+            "Arts": "#E87722",
+            "Engineering": "#6A0DAD",
+            "Environment": "#6A7F2A",
+            "Health": "#006A73",
+            "Mathematics": "#C0007A",
+            "Science": "#0033A0"
+        };
+
+        // --- Get DOM elements ---
+        const formPage = document.getElementById('form-page');
+        const cardPage = document.getElementById('card-page');
+        const viewCardBtn = document.getElementById('view-card-btn');
+        const backToFormBtn = document.getElementById('back-to-form-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const addContactBtn = document.getElementById('add-contact-btn');
+        const contactsContainer = document.getElementById('additional-contacts-container');
+        const facultyInput = document.getElementById('faculty-input');
+
+        // --- Event Listeners ---
+
+        // Update form theme color in real-time when faculty changes
+        facultyInput.addEventListener('input', () => {
+            const selectedFaculty = facultyInput.value;
+            const newColor = facultyColors[selectedFaculty] || '#4D2C91';
+            document.documentElement.style.setProperty('--primary-color', newColor);
+        });
+
+        // Add new contact input field
+        addContactBtn.addEventListener('click', () => {
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.className = 'contact-input';
+            newInput.placeholder = 'Another contact method';
+            newInput.style.marginBottom = '10px';
+            contactsContainer.appendChild(newInput);
+        });
+
+        // Switch to card preview page
+        viewCardBtn.addEventListener('click', () => {
+            const contactInputs = contactsContainer.querySelectorAll('.contact-input');
+            const contacts = [];
+            contactInputs.forEach(input => {
+                if (input.value) {
+                    contacts.push(input.value);
+                }
+            });
+
+            const cardData = {
+                name: document.getElementById('name-input').value,
+                degree: document.getElementById('degree-input').value,
+                faculty: facultyInput.value,
+                major: document.getElementById('major-input').value,
+                contacts: contacts
+            };
+            localStorage.setItem('businessCardData', JSON.stringify(cardData));
+            renderCard();
+            formPage.style.display = 'none';
+            cardPage.style.display = 'flex';
+        });
+
+        // Switch back to form page
+        backToFormBtn.addEventListener('click', () => {
+            cardPage.style.display = 'none';
+            formPage.style.display = 'block';
+        });
+
+        // --- Main Functions ---
+
+        // Render the card with data from localStorage
+        function renderCard() {
+            const data = JSON.parse(localStorage.getItem('businessCardData'));
+            if (!data) return;
+
+            // Set card separator color based on faculty
+            const separator = document.getElementById('card-separator');
+            separator.style.backgroundColor = facultyColors[data.faculty] || '#4D2C91';
+
+            // Populate text fields
+            document.getElementById('display-name').innerText = data.name || "Your Name";
+            document.getElementById('display-degree').innerText = data.degree || "Your Degree";
+            document.getElementById('display-major').innerText = data.major || "Your Major";
+            
+            // Populate contact info
+            const contactInfoContainer = document.getElementById('display-contact-info');
+            contactInfoContainer.innerHTML = ''; // Clear previous entries
+            data.contacts.forEach(contact => {
+                const contactEl = document.createElement('div');
+                contactEl.innerText = contact;
+                contactInfoContainer.appendChild(contactEl);
+            });
+        }
+        
+        // Download card images as a ZIP file
+        downloadBtn.addEventListener('click', async () => {
+            downloadBtn.textContent = 'Packaging...';
+            downloadBtn.disabled = true;
+
+            try {
+                const zip = new JSZip();
+                const cardFrontElement = document.getElementById('card-front-to-download');
+                const cardBackElement = document.getElementById('card-back-to-download');
+                
+                // Use html2canvas to capture the elements as images
+                const frontCanvas = await html2canvas(cardFrontElement, { useCORS: true, backgroundColor: null });
+                const backCanvas = await html2canvas(cardBackElement, { useCORS: true, backgroundColor: null });
+
+                // Convert canvases to blobs
+                const frontImageBlob = await new Promise(resolve => frontCanvas.toBlob(resolve, 'image/png'));
+                const backImageBlob = await new Promise(resolve => backCanvas.toBlob(resolve, 'image/png'));
+
+                // Add blobs to zip
+                zip.file("card_front.png", frontImageBlob);
+                zip.file("card_back.png", backImageBlob);
+
+                // Generate and trigger download
+                const content = await zip.generateAsync({ type: "blob" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = "business_cards.zip";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (error) {
+                console.error("Download failed:", error);
+                alert(`Sorry, the images could not be downloaded. Error: ${error.message}`);
+            } finally {
+                downloadBtn.textContent = 'Download Cards';
+                downloadBtn.disabled = false;
+            }
+        });
+
+
+        // Initial setup on page load
+        function init() {
+            // Set initial form theme color based on default dropdown value
+            const initialFaculty = facultyInput.value;
+            const initialColor = facultyColors[initialFaculty] || '#4D2C91';
+            document.documentElement.style.setProperty('--primary-color', initialColor);
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
