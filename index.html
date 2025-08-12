@@ -25,8 +25,9 @@
             background-color: var(--background-color);
             font-family: 'Lato', 'Noto Sans TC', sans-serif;
             display: flex;
+            flex-direction: column; /* Allow footer to sit below */
             justify-content: center;
-            align-items: flex-start; /* Changed to flex-start for better alignment on long pages */
+            align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 2rem;
@@ -233,7 +234,7 @@
         
         .contact-section {
             position: absolute;
-            right: 25px; /* Moved left by ~2.5cm (95px) */
+            right: 25px; /* Controls distance from the right edge */
             top: 50%;
             transform: translateY(-50%);
             text-align: left;
@@ -257,6 +258,15 @@
             max-height: 100%;
             object-fit: contain;
         }
+        
+        /* --- Footer Styles --- */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #888;
+            font-size: 0.8rem;
+        }
+
     </style>
 </head>
 <body>
@@ -336,6 +346,11 @@
         </div>
     </div>
 
+    <footer class="footer">
+        <p>&copy; 2025 Shaofu Wang. All Rights Reserved.</p>
+        <p>Powered by Gemini AI.</p>
+    </footer>
+
     <script>
         // --- Color Mapping ---
         const facultyColors = {
@@ -356,6 +371,8 @@
         const addContactBtn = document.getElementById('add-contact-btn');
         const contactsContainer = document.getElementById('additional-contacts-container');
         const facultyInput = document.getElementById('faculty-input');
+        const footer = document.querySelector('.footer');
+
 
         // --- Event Listeners ---
 
@@ -397,12 +414,14 @@
             renderCard();
             formPage.style.display = 'none';
             cardPage.style.display = 'flex';
+            footer.style.display = 'block'; // Show footer on card page
         });
 
         // Switch back to form page
         backToFormBtn.addEventListener('click', () => {
             cardPage.style.display = 'none';
             formPage.style.display = 'block';
+            footer.style.display = 'block'; // Keep footer visible on form page
         });
 
         // --- Main Functions ---
@@ -450,8 +469,8 @@
                 const backImageBlob = await new Promise(resolve => backCanvas.toBlob(resolve, 'image/png'));
 
                 // Add blobs to zip
-                zip.file("card_front.png", frontImageBlob);
-                zip.file("card_back.png", backImageBlob);
+                zip.file("business_card_front.png", frontImageBlob);
+                zip.file("business_card_back.png", backImageBlob);
 
                 // Generate and trigger download
                 const content = await zip.generateAsync({ type: "blob" });
@@ -478,6 +497,7 @@
             const initialFaculty = facultyInput.value;
             const initialColor = facultyColors[initialFaculty] || '#4D2C91';
             document.documentElement.style.setProperty('--primary-color', initialColor);
+            footer.style.display = 'block'; // Make sure footer is visible initially
         }
 
         init();
